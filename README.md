@@ -2,7 +2,7 @@
 
 **Benchmarking LLM Reasoning Beyond Well-Defined Problems** — COLM 2026.
 
-Project page: https://javierzhao.github.io/IDM-benchmark
+Project page: https://idmath.github.io
 Paper: https://openreview.net/forum?id=qgZtkgTwrJ
 
 IDM is a benchmark of 1,300 mathematically ill-defined problems — 300 expert-curated test problems and
