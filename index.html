@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ill-Defined Math (IDM) — Benchmarking LLM Reasoning Beyond Well-Defined Problems</title>
+<meta name="description" content="IDM is a benchmark of 1,300 mathematically ill-defined problems with a three-stage LLM judge, published at COLM 2026.">
+<style>
+  :root{
+    --bg:#ffffff; --fg:#1a1c1f; --muted:#5c6370; --line:#e3e6ea;
+    --accent:#1c4fd6; --accent-soft:#eef2fe; --card:#f7f8fa; --code:#f2f3f5;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#111316; --fg:#e8eaed; --muted:#a0a6b0; --line:#2a2e34;
+           --accent:#7aa2ff; --accent-soft:#181f33; --card:#181a1e; --code:#1c1f24; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);
+       font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:860px;margin:0 auto;padding:0 20px}
+  header{padding:56px 0 28px;text-align:center;border-bottom:1px solid var(--line)}
+  h1{font-size:32px;line-height:1.25;margin:0 0 6px;letter-spacing:-.01em}
+  h1 .sub{display:block;font-size:19px;font-weight:500;color:var(--muted);margin-top:10px}
+  .venue{display:inline-block;margin:16px 0 4px;padding:4px 12px;border-radius:999px;
+         background:var(--accent-soft);color:var(--accent);font-size:13px;font-weight:600}
+  .authors{margin:14px 0 4px;color:var(--fg);font-size:15px}
+  .affil{color:var(--muted);font-size:14px;margin:0}
+  .links{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:24px 0 4px}
+  .links a{display:inline-block;padding:9px 16px;border-radius:8px;border:1px solid var(--line);
+           background:var(--card);color:var(--fg);text-decoration:none;font-size:14px;font-weight:600}
+  .links a:hover{border-color:var(--accent);color:var(--accent)}
+  section{padding:34px 0;border-bottom:1px solid var(--line)}
+  h2{font-size:21px;margin:0 0 14px;letter-spacing:-.01em}
+  h3{font-size:16px;margin:22px 0 8px}
+  p{margin:0 0 14px}
+  .lead{font-size:17px}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:20px 0 4px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  .stat b{display:block;font-size:24px;line-height:1.2}
+  .stat span{color:var(--muted);font-size:13px}
+  .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table{border-collapse:collapse;width:100%;font-size:14px;min-width:520px}
+  th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:right}
+  th:first-child,td:first-child{text-align:left}
+  thead th{border-bottom:2px solid var(--line);font-size:13px;color:var(--muted);font-weight:600}
+  caption{caption-side:bottom;color:var(--muted);font-size:13px;padding-top:10px;text-align:left}
+  ol,ul{margin:0 0 14px;padding-left:22px}
+  li{margin:6px 0}
+  pre{background:var(--code);border:1px solid var(--line);border-radius:10px;padding:14px;
+      overflow-x:auto;font-size:13px;line-height:1.5}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  footer{padding:28px 0 60px;color:var(--muted);font-size:14px;text-align:center}
+  a{color:var(--accent)}
+  .note{background:var(--card);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;
+        padding:12px 16px;color:var(--muted);font-size:14px;margin:16px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="venue">COLM 2026</div>
+  <h1>Ill-Defined Math (IDM)
+    <span class="sub">Benchmarking LLM Reasoning Beyond Well-Defined Problems</span>
+  </h1>
+  <p class="authors">
+    Huaibo Chen · Yixiao Lin · Zihan Zhao · Pengcheng Chen · Nuohao Liu · Yue Hu ·
+    Qian Xie · Qinbo Bai · Ning Yan · Masood S. Mortazavi · Kamal Youcef-Toumi
+  </p>
+  <div class="links">
+    <a href="https://openreview.net/forum?id=qgZtkgTwrJ">Paper</a>
+    <a href="https://github.com/JavierZhao/IDM-benchmark">Code</a>
+    <a href="#dataset">Dataset</a>
+    <a href="#results">Results</a>
+    <a href="#bibtex">BibTeX</a>
+  </div>
+</header>
+
+<section id="abstract">
+  <h2>Abstract</h2>
+  <p class="lead">Ill-defined problems are pervasive in science and engineering, where solutions may be
+  non-existent, non-unique, or lack meaningful interpretation. Despite recent advances of large language
+  models in mathematical reasoning, their ability to reason about ill-defined problems remains poorly
+  understood. Existing benchmarks for unsolvable problems focus on shallow commonsense issues and rely on
+  inflexible evaluation schemes, primarily measuring refusal behavior rather than reasoning capability.</p>
+  <p>We introduce <strong>Ill-Defined Math (IDM)</strong>, a benchmark of 1,300 ill-defined mathematical
+  problems whose ill-definedness arises from deep, fundamental flaws in their mathematical structure, and a
+  fine-grained <strong>three-stage LLM judge</strong> that evaluates responses from three complementary
+  perspectives: final-answer statement, issue recognition, and issue fixing. Evaluating 27 recent LLMs
+  reveals substantial degradation compared to well-defined counterparts, and a clear gap between recognizing
+  ill-definedness and handling it correctly: even when models recognize the flaw, they often continue to
+  produce definitive answers without fixing the underlying issue.</p>
+</section>
+
+<section id="highlights">
+  <h2>At a glance</h2>
+  <div class="stats">
+    <div class="stat"><b>1,300</b><span>ill-defined problems</span></div>
+    <div class="stat"><b>300</b><span>expert-curated test problems</span></div>
+    <div class="stat"><b>27</b><span>LLMs evaluated</span></div>
+    <div class="stat"><b>54.4%</b><span>avg. In-task Abstention Gap</span></div>
+  </div>
+  <h3>What makes IDM different</h3>
+  <ul>
+    <li><strong>Grounded in Hadamard well-posedness</strong>, not ad-hoc perturbation. Every problem is
+    ill-defined for a verifiable formal reason — contradictory constraints or missing conditions — rather than
+    because of vague wording.</li>
+    <li><strong>Expert-curated test set.</strong> All 300 test problems are hand-modified by PhD researchers
+    and Math Olympiad participants, then independently cross-checked.</li>
+    <li><strong>A judge that decouples three behaviors</strong> — what a model <em>states</em>, what it
+    <em>recognizes</em>, and how it <em>handles</em> ill-definedness — instead of a binary refusal keyword match.</li>
+    <li><strong>Two diagnostic metrics.</strong> The In-task Abstention Gap and the Handling Gap expose failure
+    modes that capability-only metrics miss.</li>
+  </ul>
+</section>
+
+<section id="judge">
+  <h2>The three-stage judge</h2>
+  <p>The stages run sequentially, with early exit:</p>
+  <ol>
+    <li><strong>Stage I — Final-Answer Statement.</strong> Does the final answer explicitly assert that the
+    problem is ill-defined, unsolvable, or not uniquely determined? A naive, overly conservative refusal does
+    not count: the statement must match the actual ill-posedness.</li>
+    <li><strong>Stage II — Issue Fixing.</strong> Does the response repair the problem in a principled way —
+    introducing an explicit assumption, constraining a free variable, or reformulating it so the solution is
+    well-defined under stated conditions?</li>
+    <li><strong>Stage III — Issue Recognition.</strong> Does the reasoning identify the source of the
+    ill-definedness at all, even if the final answer does not act on it?</li>
+  </ol>
+  <p>Overall correctness is Stage I <em>or</em> Stage II; Stage III is reported separately as a diagnostic.
+  This is what makes "the model saw the flaw and answered anyway" a measurable quantity.</p>
+</section>
+
+<section id="results">
+  <h2>Selected results</h2>
+  <div class="scroll">
+  <table>
+    <caption>Accuracy on the IDM test set (%). Final Answer = insolvability declared in the final answer;
+    Recog. = flagged during reasoning; Overall = Stage I or Stage II. The In-task Abstention Gap is
+    Overall − Final Answer, measured entirely within the ill-defined split. See the paper for all 27 models.</caption>
+    <thead>
+      <tr><th>Model</th><th>Final Answer</th><th>Recog.</th><th>Overall</th><th>Well-defined</th><th>In-task Abst. Gap</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>GPT-5</td><td>45.2</td><td>85.3</td><td>83.6</td><td>90.7</td><td>38.5</td></tr>
+      <tr><td>Gemini 2.5 Pro</td><td>20.0</td><td>91.7</td><td>85.3</td><td>91.3</td><td>65.3</td></tr>
+      <tr><td>Grok-4</td><td>19.1</td><td>70.1</td><td>68.4</td><td>95.9</td><td>49.4</td></tr>
+      <tr><td>Claude Sonnet 4 (thinking)</td><td>11.7</td><td>90.0</td><td>83.7</td><td>86.3</td><td>72.0</td></tr>
+      <tr><td>o4-mini</td><td>30.0</td><td>64.3</td><td>63.0</td><td>90.0</td><td>33.0</td></tr>
+      <tr><td>DeepSeek-V3.1-Think</td><td>9.3</td><td>96.3</td><td>88.0</td><td>94.7</td><td>78.7</td></tr>
+      <tr><td>gpt-oss-120b</td><td>26.7</td><td>92.3</td><td>90.3</td><td>87.7</td><td>63.7</td></tr>
+      <tr><td>GPT-4o</td><td>18.0</td><td>28.3</td><td>27.0</td><td>61.7</td><td>9.0</td></tr>
+      <tr><td><em>Average over 27 models</em></td><td>14.7</td><td>74.0</td><td>69.1</td><td>83.1</td><td>54.4</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <h3>The headline finding</h3>
+  <p>Averaged over 27 models, overall correctness on ill-defined problems is 69.1% while final-answer
+  accuracy is only 14.7%. Models frequently reason their way to a reasonable response — introducing an
+  assumption, repairing a constraint — and then decline to say so in the final answer. Refusal-based metrics
+  therefore substantially underestimate reasoning capability on ill-defined problems, while overall accuracy
+  still falls well short of well-defined performance.</p>
+</section>
+
+<section id="dataset">
+  <h2>Dataset and code</h2>
+  <p>The release contains the 300-problem test set (problem, ill-definedness category, annotation of why it
+  is ill-defined, and the target behavior), the three-stage judge with its prompt templates and evaluation
+  harness, the multi-agent construction pipeline, and the training corpus with its distilled long
+  chain-of-thought supervision.</p>
+  <div class="note">Artifacts are being staged for the camera-ready release. Links here will be updated as
+  each component lands.</div>
+  <pre><code>git clone https://github.com/JavierZhao/IDM-benchmark.git</code></pre>
+</section>
+
+<section id="bibtex">
+  <h2>BibTeX</h2>
+<pre><code>@inproceedings{chen2026idm,
+  title     = {Ill-Defined Math: Benchmarking {LLM} Reasoning Beyond Well-Defined Problems},
+  author    = {Chen, Huaibo and Lin, Yixiao and Zhao, Zihan and Chen, Pengcheng and
+               Liu, Nuohao and Hu, Yue and Xie, Qian and Bai, Qinbo and Yan, Ning and
+               Mortazavi, Masood S. and Youcef-Toumi, Kamal},
+  booktitle = {Conference on Language Modeling (COLM)},
+  year      = {2026},
+  url       = {https://openreview.net/forum?id=qgZtkgTwrJ}
+}</code></pre>
+</section>
+
+<footer>
+  <p>Ill-Defined Math (IDM) · COLM 2026 · Dataset released under CC BY 4.0, code under MIT</p>
+</footer>
+
+</div>
+</body>
+</html>
