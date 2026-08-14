@@ -13,6 +13,15 @@ Across 27 evaluated LLMs, overall correctness on ill-defined problems averages 6
 accuracy averages only 14.7%: models often reason their way to a reasonable response and then decline to
 say so in the final answer.
 
+## Data
+
+Test set (300 problems) on Hugging Face:
+
+- https://huggingface.co/datasets/GYASBGFUHAADSGADF/IDM-batch1
+- https://huggingface.co/datasets/GYASBGFUHAADSGADF/IDM-batch2
+
+Code (judge, prompts, evaluation harness, construction pipeline): https://github.com/IDMath/IDM
+
 ## Repository status
 
 This repository currently hosts the project page. The following artifacts are being staged for the
